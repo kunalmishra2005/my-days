@@ -1,4 +1,5 @@
 import 'package:brand_governance/app/theme/app_theme.dart';
+import 'package:brand_governance/core/data/supabase_data_gateway.dart';
 import 'package:brand_governance/features/content_review/ai/ai_review_models.dart';
 import 'package:brand_governance/features/content_review/ai/ai_review_provider.dart';
 import 'package:brand_governance/features/content_review/ai/ai_review_service.dart';
@@ -429,7 +430,7 @@ class _AnalysisResultsScreenState extends State<AnalysisResultsScreen> {
               const SizedBox(height: 6),
               Text(
                 'Review the findings above, then record a human decision. '
-                'This local demo does not publish content.',
+                '${widget.reviewDecisionStorage is CloudBackedStorage ? 'This app does not publish content.' : 'This local demo does not publish content.'}',
                 style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
               ),
               if (_decisionLoadError != null) ...[

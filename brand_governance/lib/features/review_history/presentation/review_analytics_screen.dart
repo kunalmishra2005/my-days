@@ -1,4 +1,5 @@
 import 'package:brand_governance/app/theme/app_theme.dart';
+import 'package:brand_governance/core/data/supabase_data_gateway.dart';
 import 'package:brand_governance/features/content_review/data/content_submission_storage.dart';
 import 'package:brand_governance/features/content_review/data/human_review_decision_storage.dart';
 import 'package:brand_governance/features/content_review/domain/brand_analysis_engine.dart';
@@ -60,7 +61,8 @@ class _ReviewAnalyticsScreenState extends State<ReviewAnalyticsScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = 'Could not load analytics from local records: $error';
+        _error =
+            'Could not load analytics from ${widget.submissionStorage is CloudBackedStorage ? 'Supabase' : 'local'} records: $error';
         _isLoading = false;
       });
     }
@@ -98,8 +100,10 @@ class _ReviewAnalyticsScreenState extends State<ReviewAnalyticsScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'A snapshot of activity from submissions and human decisions saved '
-          'on this device.',
+          widget.submissionStorage is CloudBackedStorage
+              ? 'Activity from submissions and human decisions in this workspace.'
+              : 'A snapshot of activity from submissions and human decisions '
+                    'saved on this device.',
           style: theme.textTheme.bodyLarge?.copyWith(
             color: AppTheme.deepIndigo.withValues(alpha: 0.7),
           ),
@@ -123,8 +127,7 @@ class _ReviewAnalyticsScreenState extends State<ReviewAnalyticsScreen> {
                   child: Text(
                     'Analysis metrics are recalculated from saved submissions '
                     'using the currently saved guidelines. Historical analysis '
-                    'snapshots are not stored. Records remain local to this '
-                    'device.',
+                    '${widget.submissionStorage is CloudBackedStorage ? 'snapshots are not stored in the database.' : 'snapshots are not stored. Records remain local to this device.'}',
                     style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
                   ),
                 ),

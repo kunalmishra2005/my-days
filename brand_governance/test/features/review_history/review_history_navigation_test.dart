@@ -1,4 +1,5 @@
 import 'package:brand_governance/app/my_days_app.dart';
+import 'package:brand_governance/core/data/account_storage_key.dart';
 import 'package:brand_governance/features/content_review/data/content_submission_storage.dart';
 import 'package:brand_governance/features/content_review/data/human_review_decision_storage.dart';
 import 'package:brand_governance/features/content_review/domain/brand_analysis_result.dart';
@@ -11,6 +12,8 @@ import 'package:brand_governance/features/review_history/presentation/review_his
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../support/fake_authentication_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +31,9 @@ void main() {
 
   Future<void> openHistory(WidgetTester tester) async {
     await sizeForDesktop(tester);
-    await tester.pumpWidget(const MyDaysApp());
+    final authService = FakeAuthenticationService();
+    addTearDown(authService.dispose);
+    await tester.pumpWidget(MyDaysApp(authService: authService));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Review history').first);
     await tester.pumpAndSettle();
@@ -47,7 +52,9 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(const MyDaysApp());
+    final authService = FakeAuthenticationService();
+    addTearDown(authService.dispose);
+    await tester.pumpWidget(MyDaysApp(authService: authService));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Review history').first);
@@ -74,12 +81,16 @@ void main() {
       now.subtract(const Duration(days: 1)),
     );
     final other = _submission('Other post', now);
-    final submissions = const SharedPreferencesContentSubmissionStorage();
-    final decisions = const SharedPreferencesHumanReviewDecisionStorage();
+    const submissions = SharedPreferencesContentSubmissionStorage(
+      userId: 'test-user',
+    );
+    const decisions = SharedPreferencesHumanReviewDecisionStorage(
+      userId: 'test-user',
+    );
     await submissions.save(old);
     await submissions.save(latest);
     await submissions.save(other);
-    await const SharedPreferencesGuidelinesStorage().save(
+    await const SharedPreferencesGuidelinesStorage(userId: 'test-user').save(
       const BrandGuidelines(
         brandName: 'Northstar',
         prohibitedTerms: ['guaranteed'],
@@ -129,8 +140,10 @@ void main() {
       now.subtract(const Duration(days: 2)),
     );
     final newer = _submission('Newer entry', now);
-    await const SharedPreferencesContentSubmissionStorage().save(older);
-    await const SharedPreferencesContentSubmissionStorage().save(newer);
+    await const SharedPreferencesContentSubmissionStorage(userId: 'test-user')
+        .save(older);
+    await const SharedPreferencesContentSubmissionStorage(userId: 'test-user')
+        .save(newer);
     await openHistory(tester);
     expect(
       tester.getTopLeft(find.text('Newer entry')).dy,
@@ -156,16 +169,16 @@ void main() {
       now,
       body: 'Our guaranteed launch is here.',
     );
-    await const SharedPreferencesContentSubmissionStorage().save(submission);
-    await const SharedPreferencesGuidelinesStorage().save(
+    await const SharedPreferencesContentSubmissionStorage(userId: 'test-user')
+        .save(submission);
+    await const SharedPreferencesGuidelinesStorage(userId: 'test-user').save(
       const BrandGuidelines(
         brandName: 'Northstar',
         prohibitedTerms: ['guaranteed'],
       ),
     );
-    await const SharedPreferencesHumanReviewDecisionStorage().save(
-      _decision(submission, ReviewDecision.approve, now),
-    );
+    await const SharedPreferencesHumanReviewDecisionStorage(userId: 'test-user')
+        .save(_decision(submission, ReviewDecision.approve, now));
 
     await openHistory(tester);
     await tester.tap(find.text('Analytics').first);
@@ -183,7 +196,10 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({
-      'brand_governance.content_submissions.v1': '{invalid',
+      accountScopedStorageKey(
+        'brand_governance.content_submissions.v1',
+        'test-user',
+      ): '{invalid',
     });
     await openHistory(tester);
     expect(

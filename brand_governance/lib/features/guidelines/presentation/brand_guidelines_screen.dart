@@ -1,4 +1,5 @@
 import 'package:brand_governance/app/theme/app_theme.dart';
+import 'package:brand_governance/core/data/supabase_data_gateway.dart';
 import 'package:brand_governance/features/guidelines/data/guidelines_storage.dart';
 import 'package:brand_governance/features/guidelines/domain/brand_guidelines.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +53,8 @@ class _BrandGuidelinesScreenState extends State<BrandGuidelinesScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _loadError = 'Could not load local guidelines: $error';
+        _loadError =
+            'Could not load ${widget.storage is CloudBackedStorage ? 'cloud' : 'local'} guidelines: $error';
         _isLoading = false;
       });
     }
@@ -85,11 +87,17 @@ class _BrandGuidelinesScreenState extends State<BrandGuidelinesScreen> {
         _guidelines = guidelines;
         _isSaving = false;
       });
-      _showSaveMessage('Brand guidelines saved on this device.');
+      _showSaveMessage(
+        widget.storage is CloudBackedStorage
+            ? 'Brand guidelines saved to Supabase.'
+            : 'Brand guidelines saved on this device.',
+      );
     } catch (error) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      _showSaveMessage('Could not save local guidelines: $error');
+      _showSaveMessage(
+        'Could not save ${widget.storage is CloudBackedStorage ? 'cloud' : 'local'} guidelines: $error',
+      );
     }
   }
 
@@ -160,7 +168,9 @@ class _BrandGuidelinesScreenState extends State<BrandGuidelinesScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      const _LocalStorageNotice(),
+                      _StorageNotice(
+                        isCloud: widget.storage is CloudBackedStorage,
+                      ),
                       const SizedBox(height: 24),
                       _SectionCard(
                         step: '01',
@@ -461,8 +471,10 @@ class _PageHeader extends StatelessWidget {
   }
 }
 
-class _LocalStorageNotice extends StatelessWidget {
-  const _LocalStorageNotice();
+class _StorageNotice extends StatelessWidget {
+  const _StorageNotice({required this.isCloud});
+
+  final bool isCloud;
 
   @override
   Widget build(BuildContext context) {
@@ -486,16 +498,21 @@ class _LocalStorageNotice extends StatelessWidget {
                     ?.copyWith(color: AppTheme.deepIndigo, height: 1.5),
                 children: [
                   TextSpan(
-                    text: 'Local demo storage\n',
+                    text: isCloud
+                        ? 'Supabase workspace storage\n'
+                        : 'Local demo storage\n',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: AppTheme.deepIndigo,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const TextSpan(
-                    text:
-                        'Guidelines are saved on this device only. This is not '
-                        'multi-user cloud storage.',
+                  TextSpan(
+                    text: isCloud
+                        ? 'Existing guidelines are scoped to this workspace. '
+                              'First-time creation is blocked until the database '
+                              'supports a safe unique workspace record.'
+                        : 'Guidelines are saved on this device only. This is '
+                              'not multi-user cloud storage.',
                   ),
                 ],
               ),

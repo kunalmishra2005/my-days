@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:brand_governance/core/data/account_storage_key.dart';
 import 'package:brand_governance/features/content_review/domain/human_review_decision.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,9 +14,13 @@ abstract interface class HumanReviewDecisionStorage {
 
 class SharedPreferencesHumanReviewDecisionStorage
     implements HumanReviewDecisionStorage {
-  const SharedPreferencesHumanReviewDecisionStorage();
+  const SharedPreferencesHumanReviewDecisionStorage({this.userId})
+    : assert(userId == null || userId != '');
 
-  static const _storageKey = 'brand_governance.human_review_decisions.v1';
+  final String? userId;
+
+  static const _legacyStorageKey = 'brand_governance.human_review_decisions.v1';
+  String get _storageKey => accountScopedStorageKey(_legacyStorageKey, userId);
 
   @override
   Future<List<HumanReviewDecision>> loadAll() => _loadAll();

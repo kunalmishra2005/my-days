@@ -1,8 +1,10 @@
 # Content review
 
 Submissions retain their title, type, original body, unique ID, and UTC
-creation timestamp. Local storage does not rewrite a draft during analysis or
-human review.
+creation timestamp. Production saves and loads submissions from the active
+Supabase workspace using the authenticated user's ID and verified table
+columns. The local SharedPreferences adapter remains available for local
+tests/demo use.
 
 ## Deterministic analysis
 
@@ -21,9 +23,11 @@ claims are false.
 ## Human review
 
 Reviewers explicitly choose Approve, Request Changes, or Reject and provide
-their name and reason; comments are optional. The latest decision is stored
-locally with a timestamp and the analysis status at decision time. No content
-is published automatically.
+their name and reason; comments are optional. Production writes a new
+`review_decisions` row for each decision and sets `reviewer_id` from the
+authenticated session. Decision details are encoded in the existing `notes`
+text column. The local adapter continues to keep only the latest decision per
+submission. No content is published automatically.
 
 ## AI integration readiness
 
@@ -31,9 +35,10 @@ is published automatically.
 JSON and source-offset validation; an `AiReviewProvider` contract; timeout
 handling; a fixture-only mock provider; and an `AdaptionLabsReviewProvider`
 that requires an injected `AdaptionReviewGateway`. No endpoint, model name,
-credential, or real provider connection is configured. The default UI clearly
-reports AI review as unavailable, and deterministic analysis works without it.
-AI findings are rendered separately and remain advisory to a human reviewer.
+credential, or real provider connection is configured. The default UI reports
+AI review as unavailable, and deterministic analysis works without it. AI
+findings are advisory to a human reviewer.
 
-All data and decisions remain in local demo storage. This is not a cloud,
-authenticated, encrypted collaboration or audit-history system.
+Cloud access is restricted by workspace membership and RLS. Cloud and network
+errors are surfaced; the production cloud adapter does not fall back to local
+storage.

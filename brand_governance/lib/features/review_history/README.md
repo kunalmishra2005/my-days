@@ -1,24 +1,18 @@
 # Review history and analytics
 
-The Review History screen lists locally saved content submissions and their
-human decisions. It supports title search, decision and analysis-status
-filters, and oldest/newest sorting. Selecting a record opens the existing
-Analysis Results screen, where its saved decision can be inspected or updated.
+In production, Review History loads content submissions and append-only
+human-review decisions from the active Supabase workspace. Search, decision
+and analysis-status filters, and sorting operate on those loaded records.
+Selecting a record opens the existing Analysis Results screen.
 
 The Analytics dashboard calculates submission, decision, pending-review,
-critical/high/medium/low finding, and seven-day activity metrics from locally
-saved submissions and decisions. Critical findings and common detected
-violations are derived by running the deterministic analysis engine against
-saved submissions and the currently saved brand guidelines. The app does not
-save historical analysis snapshots, so guideline changes can change these
-analysis metrics. If no brand profile is saved, analysis-only metrics are
-marked unavailable.
+critical/high/medium/low finding, and seven-day activity metrics from the
+currently loaded submissions and decisions. Analysis findings are recomputed
+using the current guidelines. The app does not save `analysis_snapshots`, so
+guideline changes can alter analysis metrics; these metrics are not a
+historical record of the analysis performed at submission time.
 
-The existing decision store keeps only the latest decision for each
-submission. Activity counts therefore reflect currently stored decisions, not
-every decision revision that may previously have been made. All data remains
-in local demo storage on this device. These features do not provide cloud
-synchronization, multi-user collaboration, authentication, or automated
-publishing.
-
-Human reviewers retain the final approval decision.
+Cloud decisions are append-only. The local demo adapter remains device-local
+and keeps only the latest decision per submission. Analytics and review
+history do not implement `audit_events`, multi-workspace selection, or
+automated publishing. Human reviewers retain the final approval decision.

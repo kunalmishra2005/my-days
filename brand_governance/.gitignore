@@ -46,3 +46,10 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+#MY DAY'S local environment
+configuration
+.env
+.env.*
+!.env.example
+

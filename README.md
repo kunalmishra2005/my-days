@@ -1,17 +1,39 @@
-# my_days
+# MY DAY'S repositories
 
-A new Flutter project.
+This repository contains two separate Flutter applications:
 
-## Getting Started
+1. The original personal-memory prototype at the repository root.
+2. The CodeNexus Round 3 Brand Governance app in
+   [`brand_governance/`](brand_governance/).
 
-This project is a starting point for a Flutter application.
+## Brand Governance judge demo
 
-A few resources to get you started if this is your first Flutter project:
+The Brand Governance app includes a fictional, local-only judge workspace. From
+the app folder, run:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```powershell
+cd brand_governance
+flutter pub get
+flutter run -d chrome
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Choose **Explore sample workspace**. The local demo needs no credentials and
+does not connect to Supabase. It uses fictional sample data only. With
+`SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` provided, the app instead uses
+Supabase Auth and its RLS-protected cloud adapters. Never use a service-role
+key in the Flutter client.
+
+The cloud adapters are not a claim of fully completed cloud setup: workspace
+creation and initial guideline creation are deliberately blocked where the
+verified schema cannot guarantee safe, duplicate-resistant operations.
+Historical analysis snapshots and audit events are not persisted. No live
+Adaption Labs AI integration is configured.
+
+See the [Brand Governance README](brand_governance/README.md) for judge access,
+setup, feature list, architecture, status of the three locally documented
+Round 3 recommendations, limitations, and submission checklist.
+
+## Repository scope
+
+The Brand Governance app's source, tests, docs, and platform configuration
+live under `brand_governance/`. The original root app remains under `lib/`.

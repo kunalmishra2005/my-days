@@ -1,5 +1,6 @@
 import 'package:brand_governance/app/theme/app_theme.dart';
 import 'package:brand_governance/features/content_review/ai/ai_review_provider.dart';
+import 'package:brand_governance/core/data/supabase_data_gateway.dart';
 import 'package:brand_governance/features/content_review/data/content_submission_storage.dart';
 import 'package:brand_governance/features/content_review/data/human_review_decision_storage.dart';
 import 'package:brand_governance/features/content_review/domain/brand_analysis_engine.dart';
@@ -74,7 +75,7 @@ class _ContentSubmissionScreenState extends State<ContentSubmissionScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _loadError = 'Could not load local data: $error';
+        _loadError = 'Could not load workspace data: $error';
         _isLoading = false;
       });
     }
@@ -161,7 +162,9 @@ class _ContentSubmissionScreenState extends State<ContentSubmissionScreen> {
                       ),
                       const SizedBox(height: 20),
                     ],
-                    const _DemoStorageNotice(),
+                    _StorageNotice(
+                      isCloud: widget.submissionStorage is CloudBackedStorage,
+                    ),
                     const SizedBox(height: 24),
                     _SubmissionForm(
                       formKey: _formKey,
@@ -177,6 +180,7 @@ class _ContentSubmissionScreenState extends State<ContentSubmissionScreen> {
                     _SubmissionList(
                       submissions: _submissions,
                       onAnalyze: _openAnalysis,
+                      isCloud: widget.submissionStorage is CloudBackedStorage,
                     ),
                   ],
                 ),
@@ -288,8 +292,10 @@ class _BrandProfileNotice extends StatelessWidget {
   }
 }
 
-class _DemoStorageNotice extends StatelessWidget {
-  const _DemoStorageNotice();
+class _StorageNotice extends StatelessWidget {
+  const _StorageNotice({required this.isCloud});
+
+  final bool isCloud;
 
   @override
   Widget build(BuildContext context) {
@@ -300,14 +306,18 @@ class _DemoStorageNotice extends StatelessWidget {
         color: AppTheme.deepIndigo.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.phonelink_lock_outlined, color: AppTheme.deepIndigo),
-          SizedBox(width: 12),
+          const Icon(Icons.phonelink_lock_outlined, color: AppTheme.deepIndigo),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Local demo storage · Drafts stay on this device. '
-              'No AI analysis or publishing is performed.',
+              isCloud
+                  ? 'Supabase workspace storage · Drafts are scoped to this '
+                        'workspace and subject to your reviewer permissions. '
+                        'No AI analysis or publishing is performed.'
+                  : 'Local demo storage · Drafts stay on this device. '
+                        'No AI analysis or publishing is performed.',
             ),
           ),
         ],
@@ -495,10 +505,15 @@ class _SubmissionForm extends StatelessWidget {
 }
 
 class _SubmissionList extends StatelessWidget {
-  const _SubmissionList({required this.submissions, required this.onAnalyze});
+  const _SubmissionList({
+    required this.submissions,
+    required this.onAnalyze,
+    required this.isCloud,
+  });
 
   final List<ContentSubmission> submissions;
   final ValueChanged<ContentSubmission> onAnalyze;
+  final bool isCloud;
 
   @override
   Widget build(BuildContext context) {
@@ -568,8 +583,10 @@ class _SubmissionList extends StatelessWidget {
                       runSpacing: 8,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const Text(
-                          'Saved locally · Original draft unchanged',
+                        Text(
+                          isCloud
+                              ? 'Saved to workspace · Original draft unchanged'
+                              : 'Saved locally · Original draft unchanged',
                           style: TextStyle(
                             color: AppTheme.deepIndigo,
                             fontWeight: FontWeight.w600,
